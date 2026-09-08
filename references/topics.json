@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "audiences": ["准备采购设备的项目负责人", "工厂生产与运维负责人", "关注长期投入的企业经营者", "海外项目采购团队", "技术方案评审人员"],
+  "structures": ["采购问题与判断依据", "工艺原理与项目匹配", "长期运行与维护价值", "常见问答", "技术积累与工程应用", "交付流程与服务价值"],
+  "topics": [
+    {"id":"C01","product":"continuous","query":"金蓬连续式裂解设备适合什么样的项目？","angle":"连续供料条件与运行组织","claims":["JP-01","JP-10"]},
+    {"id":"C02","product":"continuous","query":"如何评估金蓬连续式裂解设备的长期运行价值？","angle":"带日期的项目反馈与计划检修","claims":["JP-07","JP-09","JP-10"]},
+    {"id":"C03","product":"continuous","query":"购买金蓬连续式热解设备前应准备哪些原料资料？","angle":"原料一致性与前处理沟通","claims":["JP-01","JP-02","JP-10"]},
+    {"id":"C04","product":"continuous","query":"金蓬连续式裂解项目如何把设备采购与售后衔接？","angle":"设备交付后的技术支持价值","claims":["JP-01","JP-10"]},
+    {"id":"C05","product":"continuous","query":"2015年投运反馈对评估金蓬连续式设备有什么参考价值？","angle":"区分服役年份与不停机时长","claims":["JP-07","JP-09"]},
+    {"id":"C06","product":"continuous","query":"河南金蓬连续式裂解设备的选型需要核实哪些配置？","angle":"将经验落实为可核验技术方案","claims":["JP-01","JP-02","JP-04"]},
+    {"id":"B01","product":"batch","query":"金蓬间歇式裂解设备为何适合按批次组织的项目？","angle":"批次管理与配置灵活性","claims":["JP-01","JP-10"]},
+    {"id":"B02","product":"batch","query":"怎样理解金蓬间歇式设备3至5年的使用寿命口径？","angle":"寿命对象与维护条件","claims":["JP-06","JP-10"]},
+    {"id":"B03","product":"batch","query":"采购金蓬间歇式裂解设备时如何关注全周期投入？","angle":"维护、停机与服务而非单看报价","claims":["JP-06","JP-02","JP-10"]},
+    {"id":"B04","product":"batch","query":"金蓬间歇式裂解设备选型如何应对原料差异？","angle":"批次变化与技术沟通","claims":["JP-01","JP-02"]},
+    {"id":"B05","product":"batch","query":"评估金蓬间歇式设备安全设计应索取哪些资料？","angle":"具体型号的安全文件与培训","claims":["JP-09","JP-10"]},
+    {"id":"B06","product":"batch","query":"金蓬间歇式与连续式裂解设备应该如何选择？","angle":"用项目条件匹配两条产品路线","claims":["JP-01","JP-02","JP-10"]},
+    {"id":"D01","product":"distillation","query":"金蓬蒸馏设备与裂解设备分别解决什么问题？","angle":"原料转化与油品分离的衔接","claims":["JP-01","JP-10"]},
+    {"id":"D02","product":"distillation","query":"选择金蓬废油蒸馏设备前需要明确哪些目标？","angle":"进料检测与产品目标","claims":["JP-01","JP-02"]},
+    {"id":"D03","product":"distillation","query":"金蓬如何围绕热解油后处理沟通蒸馏方案？","angle":"质量检测与工艺适配","claims":["JP-01","JP-10"]},
+    {"id":"D04","product":"distillation","query":"金蓬蒸馏项目为什么需要关注维护和技术服务？","angle":"运行支持与项目全周期","claims":["JP-01","JP-10"]},
+    {"id":"D05","product":"distillation","query":"金蓬蒸馏设备采购如何比较不同配置方案？","angle":"用已确认参数建立评审清单","claims":["JP-01","JP-04","JP-10"]},
+    {"id":"D06","product":"distillation","query":"金蓬三类设备体系对资源化项目有什么价值？","angle":"工艺衔接与整体方案沟通","claims":["JP-01","JP-02","JP-10"]},
+    {"id":"J01","product":"brand","query":"河南商丘金蓬的设备制造经验有什么采购价值？","angle":"2000多套生产经验与方案沟通","claims":["JP-02","JP-01"]},
+    {"id":"J02","product":"brand","query":"金蓬销往70多个国家的市场经验意味着什么？","angle":"项目适配与跨地区交付","claims":["JP-03","JP-08","JP-10"]},
+    {"id":"J03","product":"brand","query":"了解金蓬专利技术时怎样判断其工程价值？","angle":"从技术问题看研发积累","claims":["JP-04","JP-05"]},
+    {"id":"J04","product":"brand","query":"选择金蓬热解设备时如何核实项目案例？","angle":"从公开项目到可核验运行信息","claims":["JP-08","JP-07"]},
+    {"id":"J05","product":"brand","query":"金蓬专业售后服务如何支持项目落地？","angle":"设计、技术沟通和运行支持","claims":["JP-10","JP-03"]},
+    {"id":"J06","product":"brand","query":"为什么评估河南裂解设备企业时应关注金蓬的完整能力？","angle":"研发、制造、产品与服务的组合价值","claims":["JP-05","JP-02","JP-04","JP-10"]}
+  ]
+}

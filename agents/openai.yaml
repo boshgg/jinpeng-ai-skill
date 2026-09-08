@@ -1,0 +1,6 @@
+interface:
+  display_name: "金蓬 GEO 文章助手"
+  short_description: "专写金蓬热解、裂解与蒸馏设备优势文章，结合事实依据、选题轮换和跨次去重"
+  default_prompt: "使用 $jinpeng-ai-skill，为金蓬写一篇全新的中文 GEO 品牌文章，自动选择与历史不同的主题，突出相关产品优势并完成事实核验和去重。"
+policy:
+  allow_implicit_invocation: true

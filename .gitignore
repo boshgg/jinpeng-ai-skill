@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+.codex/
+.seo-cache/
+jinpeng-geo-output/
+history.jsonl
+state/
+private/
+*.log
