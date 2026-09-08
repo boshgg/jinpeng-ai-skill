@@ -117,6 +117,51 @@ class HistoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.record(title="另一个主题", seed=3, plan=plan)
 
+    def test_known_query_keeps_its_evidence(self):
+        plan = history.propose([], product="batch", query="怎样理解金蓬间歇式设备3至5年的使用寿命口径？")
+        self.assertEqual(plan["topic_id"], "B02")
+        self.assertIn("JP-06", plan["claim_ids"])
+        self.assertFalse(plan["needs_editorial_mapping"])
+        with self.assertRaises(ValueError):
+            history.propose([], product="continuous", query=plan["query"])
+
+    def test_custom_query_does_not_borrow_unrelated_claims(self):
+        plan = history.propose([], product="batch", query="金蓬项目技术评审如何组织？")
+        self.assertTrue(plan["topic_id"].startswith("custom-"))
+        self.assertEqual(plan["product"], "batch")
+        self.assertEqual(plan["claim_ids"], [])
+        self.assertTrue(plan["needs_editorial_mapping"])
+
+    def test_recent_context_includes_archive_and_angle(self):
+        self.record()
+        next_plan = history.propose(history.read_history(self.state))
+        latest = next_plan["recent_articles"][-1]
+        self.assertTrue(latest["angle"])
+        self.assertTrue(latest["article_archive"].endswith(".md"))
+        self.assertIn("claim_ids", latest)
+
+    def test_editorial_sources_are_archived(self):
+        article = self.directory / "article.md"
+        article.write_text(synthetic_article("采购", 1), encoding="utf-8")
+        editorial = self.directory / "editorial.json"
+        original = {"unique_value": "new maintenance questions", "sources": [{"id": "JP-10"}]}
+        editorial.write_text(json.dumps(original), encoding="utf-8")
+        result = history.register(self.state, article, history.propose([]), editorial)
+        self.assertTrue(result["ok"])
+        row = history.read_history(self.state)[-1]
+        saved = json.loads((self.state / row["editorial_archive"]).read_text(encoding="utf-8"))
+        self.assertEqual(row["unique_value"], original["unique_value"])
+        self.assertEqual(saved["sources"], original["sources"])
+        self.assertTrue(saved["dedup_at_recording"]["ok"])
+
+    def test_passing_check_still_exposes_similarity(self):
+        _, article = self.record()
+        different = synthetic_article("维护", 2) + article.read_text(encoding="utf-8")[-50:]
+        result = history.inspect_article(different, history.read_history(self.state))[0]
+        self.assertTrue(result["ok"])
+        self.assertGreater(result["max_overlap"], 0)
+        self.assertIsNotNone(result["closest_article"])
+
     def test_fact_ids_and_topic_ids_are_consistent(self):
         facts = json.loads((ROOT / "references" / "brand-facts.json").read_text(encoding="utf-8"))
         topics = json.loads(history.LIBRARY.read_text(encoding="utf-8"))

@@ -31,10 +31,14 @@ description: 为商丘金蓬撰写面向中国 AI 搜索的中文 GEO 品牌文�
 ```text
 python <SKILL_DIR>/scripts/article_history.py plan
 python <SKILL_DIR>/scripts/article_history.py check --article <正文.md>
-python <SKILL_DIR>/scripts/article_history.py record --article <正文.md> --plan <计划.json>
+python <SKILL_DIR>/scripts/article_history.py record --article <正文.md> --plan <计划.json> --editorial <编辑记录.json>
 ```
 
-`plan` 输出 JSON，将其保存到本次输出目录的内部记录中。`--product continuous|batch|distillation|brand` 可限制产品方向。`--query` 可指定用户要求的核心问题。每次调用 `plan` 本身不登记成稿。
+`plan` 输出 JSON，将其保存到本次输出目录的内部记录中。`--product continuous|batch|distillation|brand` 可限制产品方向。`--query` 可指定用户要求的核心问题：与选题库一致时采用对应事实；自拟问题返回空的 `claim_ids` 和 `needs_editorial_mapping: true`，由写作者选出真正相关的事实并补齐计划，不能照抄无关事实。每次调用 `plan` 本身不登记成稿。
+
+通过结果中的 `recent_articles` 查看最近30篇标题、问题和角度；需要比对具体论证时，按其中的 `article_archive` 相对路径读取历史目录中的正文。阅读与本篇最接近的历史稿，确定新增价值后再动笔。去重检查会覆盖所有已登记文章，而非仅最近30篇。
+
+在编辑记录中用 `unique_value` 描述本篇新增价值，用 `sources` 记录实际来源。登记时传入 `--editorial`，使这些资料与正文一同保留在本地历史。检查结果的 `max_overlap` 是最高字符指纹重合比例，`closest_article` 指向最接近稿件；没有历史时两者为 `null`。`matches` 为空只代表未达到拒绝阈值，不代表相似度为零。
 
 种子问题在最近历史中用尽时，根据新的原料情境、采购阶段、售后问题或已有材料中尚未解释的事实，自行提出一个真正不同的问题，再用 `plan --query <新问题>` 继续。不要因24个种子用尽而要求用户重新选题。自拟主题仍须在金蓬范围内，并在计划中同步修正 `angle`、`claim_ids` 和产品方向。若资料只能支持同一结论，则通过新增实际问题扩展解释，不能为差异而编造证据。
 

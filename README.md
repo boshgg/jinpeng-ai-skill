@@ -38,11 +38,13 @@ $jinpeng-ai-skill 根据我提供的专利清单和运行记录，更新事实�
 ```text
 python scripts/article_history.py plan
 python scripts/article_history.py check --article article.md
-python scripts/article_history.py record --article article.md --plan plan.json
+python scripts/article_history.py record --article article.md --plan plan.json --editorial editorial.json
 python -m unittest discover -s tests -v
 ```
 
 `plan` 向标准输出返回 JSON，写稿时将它保存为 `plan.json`。`check` 返回退出码0表示未达到重复阈值，2表示重复或输入/历史异常。`record` 会再次检查，只有通过才写入历史；历史含全文，请妥善保存。
+
+指定问题与种子问题一致时自动带上对应资料；自拟问题由写作者补充相关事实ID，工具不会随机搭配资料。历史还保存论证角度、事实ID和独特价值；传入 `--editorial` 时保存来源记录快照。`check` 会返回最高字符重合比例和最近似文章，未达到重复阈值不表示零相似。
 
 默认历史目录为 `~/.codex/jinpeng-ai-skill/`。用 `JINPENG_GEO_STATE_DIR` 或每个子命令的 `--state-dir` 指定其他位置。多人或多台电脑需共享同一历史目录才可共同去重；各自独立历史不具备跨设备去重能力。没有历史时从首篇累计，不能与尚未登记的文章比较。
 

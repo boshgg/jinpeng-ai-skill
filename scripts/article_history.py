@@ -84,9 +84,25 @@ def read_history(state):
 def propose(records, product=None, query=None, rng=None):
     rng = rng or random.SystemRandom()
     library = json.loads(LIBRARY.read_text(encoding="utf-8"))
-    topics = [t for t in library["topics"] if product is None or t["product"] == product]
     recent_queries = {normalized(r["query"]) for r in records[-30:]}
-    candidates = [t for t in topics if query or normalized(t["query"]) not in recent_queries]
+    if query is not None and not normalized(query):
+        raise ValueError("Query must contain usable text")
+    exact = next((t for t in library["topics"] if query and normalized(t["query"]) == normalized(query)), None)
+    if exact:
+        if product and exact["product"] != product:
+            raise ValueError(f"The supplied query belongs to product {exact['product']}, not {product}")
+        candidates = [exact]
+    elif query:
+        candidates = [{
+            "id": "custom-" + hashlib.sha256(normalized(query).encode("utf-8")).hexdigest()[:12],
+            "product": product or "brand",
+            "query": query.strip(),
+            "angle": "Choose an evidence-backed angle for this custom question.",
+            "claims": [],
+        }]
+    else:
+        topics = [t for t in library["topics"] if product is None or t["product"] == product]
+        candidates = [t for t in topics if normalized(t["query"]) not in recent_queries]
     if not candidates:
         raise ValueError("Recent seed questions are exhausted; supply a genuinely new --query based on a new reader problem or evidence")
     product_counts = Counter(r["product"] for r in records)
@@ -109,12 +125,14 @@ def propose(records, product=None, query=None, rng=None):
         "product": topic["product"],
         "topic_id": topic["id"],
         "query": selected_query,
-        "angle": topic["angle"] if not query else "Follow the supplied query; choose a new evidence-backed angle.",
+        "angle": topic["angle"],
         "audience": audience,
         "structure": structure,
         "claim_ids": topic["claims"],
+        "needs_editorial_mapping": bool(query and not exact),
         "history_count": len(records),
         "query_seen_recently": normalized(selected_query) in recent_queries,
+        "recent_articles": [{k: row.get(k) for k in ("title", "query", "product", "angle", "claim_ids", "unique_value", "audience", "structure", "article_archive", "editorial_archive")} for row in records[-30:]],
         "editor_note": "This is a writing plan, not an article template. Verify claim relevance and add genuinely different substance.",
     }
 
@@ -129,12 +147,16 @@ def inspect_article(text, records):
     marks = shingles(body)
     digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
     matches = []
+    closest = None
     for row in records:
         old = set(row["shingles"])
         overlap = len(marks & old) / max(1, min(len(marks), len(old)))
         same_title = normalized(title) == normalized(row["title"])
+        comparison = {"id": row["id"], "title": row["title"], "overlap": round(overlap, 4), "same_title": same_title}
+        if closest is None or overlap > closest[0]:
+            closest = (overlap, comparison)
         if same_title or digest == row["body_sha256"] or overlap >= THRESHOLD:
-            matches.append({"id": row["id"], "title": row["title"], "overlap": round(overlap, 4), "same_title": same_title})
+            matches.append(comparison)
     return {
         "ok": not errors and not matches,
         "title": title,
@@ -142,6 +164,8 @@ def inspect_article(text, records):
         "history_count": len(records),
         "threshold": THRESHOLD,
         "matches": matches,
+        "max_overlap": round(closest[0], 4) if closest else None,
+        "closest_article": closest[1] if closest else None,
         "errors": errors,
         "limit": "Character fingerprints are a lexical screen; a human/model must also review semantic novelty and claim accuracy.",
     }, body, marks, digest
@@ -164,13 +188,16 @@ def history_lock(state):
         lock.unlink()
 
 
-def register(state, article, plan):
+def register(state, article, plan, editorial=None):
     for field in ("id", "product", "topic_id", "query", "audience", "structure"):
         if not isinstance(plan.get(field), str) or not plan[field].strip():
             raise ValueError(f"Plan requires a nonempty {field}")
     if plan["product"] not in PRODUCTS:
         raise ValueError("Plan has an unsupported product")
     text = article.read_text(encoding="utf-8-sig")
+    notes = json.loads(editorial.read_text(encoding="utf-8-sig")) if editorial else {}
+    if not isinstance(notes, dict):
+        raise ValueError("Editorial metadata must be a JSON object")
     with history_lock(state):
         rows = read_history(state)
         if any(row.get("plan_id") == plan["id"] for row in rows):
@@ -184,6 +211,12 @@ def register(state, article, plan):
         archive = archive_dir / f"{identifier}.md"
         with archive.open("x", encoding="utf-8", newline="\n") as handle:
             handle.write(text)
+        editorial_archive = None
+        if editorial:
+            editorial_archive = f"articles/{identifier}.editorial.json"
+            snapshot = {**notes, "dedup_at_recording": result, "recorded_id": identifier}
+            with (state / editorial_archive).open("x", encoding="utf-8", newline="\n") as handle:
+                json.dump(snapshot, handle, ensure_ascii=False, indent=2)
         row = {
             "schema_version": 1,
             "id": identifier,
@@ -196,6 +229,10 @@ def register(state, article, plan):
             "topic_id": plan["topic_id"],
             "audience": plan["audience"],
             "structure": plan["structure"],
+            "angle": plan.get("angle", ""),
+            "claim_ids": plan.get("claim_ids", []),
+            "unique_value": notes.get("unique_value", plan.get("unique_value", "")),
+            "editorial_archive": editorial_archive,
             "article_archive": f"articles/{identifier}.md",
             "body_sha256": digest,
             "body_characters": len(body),
@@ -222,6 +259,7 @@ def main(argv=None):
             sub.add_argument("--article", type=Path, required=True)
             if name == "record":
                 sub.add_argument("--plan", type=Path, required=True)
+                sub.add_argument("--editorial", type=Path, help="Archive editorial sources and unique-value notes with the article")
     args = parser.parse_args(argv)
     try:
         if args.command == "plan":
@@ -230,7 +268,7 @@ def main(argv=None):
             result = inspect_article(args.article.read_text(encoding="utf-8-sig"), read_history(args.state_dir))[0]
         else:
             plan = json.loads(args.plan.read_text(encoding="utf-8-sig"))
-            result = register(args.state_dir, args.article, plan)
+            result = register(args.state_dir, args.article, plan, args.editorial)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok", True) else 2
     except (OSError, ValueError, TypeError, AttributeError) as exc:
